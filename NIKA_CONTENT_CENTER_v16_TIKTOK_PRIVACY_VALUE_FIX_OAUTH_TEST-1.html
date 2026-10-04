@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071a3d">
+<title>NIKA CONTENT CENTER</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#071a3d;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:520px;margin:auto;min-height:100vh;padding:20px 16px 34px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.logo{font-size:22px;font-weight:900}.logo span{color:#6ea8ff}
+.status{font-size:11px;padding:7px 10px;border:1px solid #294878;border-radius:20px;color:#a9c7f7}
+h1{font-size:29px;line-height:1.1;margin:8px 0 7px}.sub{color:#9db2d4;font-size:14px;margin-bottom:22px}
+.card{background:#102957;border:1px solid #1e3b68;border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 10px 30px #0002}
+label{display:block;font-size:12px;color:#a9bee0;font-weight:700;margin:0 0 8px}
+input,textarea,select{width:100%;border:1px solid #31517f;background:#091f46;color:#fff;border-radius:12px;padding:13px;font-size:14px;outline:none}
+textarea{min-height:105px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:#6ea8ff}
+.drop{border:1.5px dashed #5275a8;background:#0a2149;border-radius:16px;padding:25px 15px;text-align:center;cursor:pointer}.drop b{display:block;font-size:15px;margin-bottom:5px}.drop small{color:#8fa8ce}
+.platforms{display:grid;grid-template-columns:1fr 1fr;gap:9px}.platform{display:flex;align-items:center;gap:9px;border:1px solid #31517f;background:#0a2149;border-radius:12px;padding:12px;font-size:13px}.platform input{width:auto;accent-color:#6ea8ff}
+.btn{width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:900;color:#071a3d;background:#fff;cursor:pointer;margin-top:4px}.btn:disabled{opacity:.55}
+.note{font-size:11px;color:#819bc3;text-align:center;margin-top:12px;line-height:1.5}.preview{display:none;margin-top:12px;padding:10px;border-radius:12px;background:#0a2149;color:#a9c7f7;font-size:12px}
+.connection-list{display:flex;flex-direction:column;gap:9px}.connection-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #31517f;background:#0a2149;border-radius:12px;padding:11px 12px}.connection-row b{display:block;font-size:13px}.connection-row small{display:block;margin-top:3px;color:#8fa8ce;font-size:11px}.connection-row button,.refresh-btn{border:1px solid #31517f;background:#102957;color:#a9c7f7;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:800}.connection-row button{display:none}.connection-row.disconnected button{display:block}.connection-row.connected{border-color:#3e9b6d}.connection-row.disconnected{border-color:#b65b66}.refresh-btn{width:100%;margin-top:10px;padding:10px}.result{display:none;margin-top:14px;border-radius:14px;padding:13px;font-size:13px;line-height:1.5;background:#0a2149;border:1px solid #31517f}.result a{color:#8fc0ff}.ok{border-color:#3e9b6d}.err{border-color:#b65b66}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="header"><div class="logo">NIKA <span>CONTENT CENTER</span></div><div class="status">YouTube + TikTok + Instagram + Facebook • v16</div></div>
+<h1>Publish Content</h1><div class="sub">Satu video, satu caption, kirim ke banyak platform.</div>
+
+<div class="card">
+<label>VIDEO</label>
+<div class="drop" onclick="document.getElementById('video').click()"><b>＋ Pilih video</b><small>MP4 • Maks. 50 MB untuk tahap POC</small><input id="video" type="file" accept="video/*" hidden></div>
+<div id="preview" class="preview"></div>
+</div>
+
+<div class="card">
+<label>JUDUL</label><input id="title" placeholder="Contoh: NIKA Content Test">
+<div style="height:14px"></div><label>CAPTION / DESKRIPSI</label><textarea id="description" placeholder="Tulis caption atau deskripsi video..."></textarea>
+<div style="height:14px"></div><label>HASHTAG</label><input id="tags" placeholder="#NIKA #Content #Indonesia">
+</div>
+
+<div class="card">
+<label>PLATFORM</label>
+<div class="platforms">
+<label class="platform"><input id="yt" type="checkbox" checked> YouTube</label>
+<label class="platform"><input id="tiktok" type="checkbox"> TikTok</label>
+<label class="platform"><input id="instagram" type="checkbox"> Instagram</label>
+<label class="platform"><input id="facebook" type="checkbox"> Facebook</label>
+</div>
+<div id="tiktokPrivacyBox" style="display:none;margin-top:14px">
+  <label>VISIBILITAS TIKTOK</label>
+  <select id="tiktokPrivacy">
+    <option value="">Pilih visibilitas TikTok</option>
+  </select>
+  <div id="tiktokPrivacyNote" class="note" style="text-align:left;margin-top:7px">
+    Pilihan privacy diambil langsung dari TikTok.
+  </div>
+</div>
+<div style="height:14px"></div><label>VISIBILITAS YOUTUBE</label>
+<select id="privacy"><option value="private">Private</option><option value="unlisted">Unlisted</option><option value="public">Public</option></select>
+</div>
+
+
+<div class="card" id="connectionCard">
+<label>STATUS KONEKSI PLATFORM</label>
+<div id="connectionList" class="connection-list">
+  <div class="connection-row" id="status-youtube"><div><b>YouTube</b><small>Memeriksa...</small></div><button type="button" onclick="reconnectPlatform('youtube')">RECONNECT</button></div>
+  <div class="connection-row disconnected" id="status-tiktok"><div><b>TikTok</b><small>Belum diverifikasi — tekan RECONNECT</small></div><button type="button" onclick="reconnectPlatform('tiktok')">RECONNECT</button></div>
+  <div class="connection-row" id="status-instagram"><div><b>Instagram</b><small>Memeriksa...</small></div><button type="button" onclick="reconnectPlatform('instagram')">RECONNECT</button></div>
+  <div class="connection-row" id="status-facebook"><div><b>Facebook</b><small>Memeriksa...</small></div><button type="button" onclick="reconnectPlatform('facebook')">RECONNECT</button></div>
+</div>
+<button class="refresh-btn" type="button" onclick="checkAllConnections()">↻ REFRESH STATUS</button>
+<div id="facebookPageSelector" style="display:none;margin-top:12px">
+  <label>FACEBOOK PAGE</label>
+  <select id="facebookPageSelect" onchange="selectFacebookPage()">
+    <option value="">Memuat Page...</option>
+  </select>
+  <div id="facebookPageNote" class="note" style="text-align:left;margin-top:7px"></div>
+</div>
+<div id="connectionNote" class="note">Status dibaca dari backend Supabase. Tombol Reconnect membuka OAuth platform.</div>
+</div>
+
+<div class="card" id="loginCard">
+<label>LOGIN NIKA CONTENT CENTER</label>
+<input id="loginEmail" type="email" placeholder="Email">
+<div style="height:10px"></div>
+<input id="loginPassword" type="password" placeholder="Password">
+<div style="height:10px"></div>
+<button class="btn" id="loginBtn" type="button" onclick="loginNika()">LOGIN</button>
+<div id="loginStatus" class="note"></div>
+</div>
+
+<button class="btn" id="publishBtn" onclick="publish()" disabled>PUBLISH CONTENT</button>
+<div id="result" class="result"></div>
+<div class="note">YouTube + TikTok + Instagram + Facebook aktif. TikTok saat ini menggunakan mode SELF_ONLY untuk POC.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://zawhkoayeqaiyhojbelw.supabase.co";
+const SUPABASE_KEY="sb_publishable_GNqNN0bBQ2SP1qsu8JI1wg_8gipAR7A";
+const PUBLISH_FUNCTION=SUPABASE_URL+"/functions/v1/publish-youtube";
+const TIKTOK_FUNCTION=SUPABASE_URL+"/functions/v1/tiktok-publish";
+const TIKTOK_STATUS=SUPABASE_URL+"/functions/v1/tiktok-status";
+const TIKTOK_CREATOR_INFO=SUPABASE_URL+"/functions/v1/tiktok-creator-info";
+const INSTAGRAM_FUNCTION=SUPABASE_URL+"/functions/v1/instagram-publish";
+const FACEBOOK_FUNCTION=SUPABASE_URL+"/functions/v1/facebook-publish";
+const YOUTUBE_STATUS=SUPABASE_URL+"/functions/v1/youtube-status";
+const INSTAGRAM_STATUS=SUPABASE_URL+"/functions/v1/instagram-status";
+const FACEBOOK_STATUS=SUPABASE_URL+"/functions/v1/facebook-status";
+const FACEBOOK_PAGES=SUPABASE_URL+"/functions/v1/facebook-pages";
+const YOUTUBE_OAUTH=SUPABASE_URL+"/functions/v1/youtube-oauth";
+const TIKTOK_OAUTH=SUPABASE_URL+"/functions/v1/tiktok-oauth";
+const INSTAGRAM_OAUTH=SUPABASE_URL+"/functions/v1/instagram-oauth";
+const FACEBOOK_OAUTH=SUPABASE_URL+"/functions/v1/facebook-oauth";
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentSession = null;
+
+async function initAuth(){
+  const { data } = await supabaseClient.auth.getSession();
+  currentSession = data.session;
+
+  if(currentSession){
+    document.getElementById("loginCard").style.display="none";
+    document.getElementById("publishBtn").disabled=false;
+    checkAllConnections();
+  }else{
+    setConnectionText("youtube","Login diperlukan");
+    setConnectionText("instagram","Login diperlukan");
+    setConnectionText("facebook","Login diperlukan");
+  }
+}
+
+async function loginNika(){
+  const email=document.getElementById("loginEmail").value.trim();
+  const password=document.getElementById("loginPassword").value;
+  const status=document.getElementById("loginStatus");
+  const loginBtn=document.getElementById("loginBtn");
+
+  if(!email||!password){
+    status.textContent="Isi email dan password.";
+    return;
+  }
+
+  loginBtn.disabled=true;
+  loginBtn.textContent="LOGIN...";
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    status.textContent="Login gagal: "+error.message;
+    loginBtn.disabled=false;
+    loginBtn.textContent="LOGIN";
+    return;
+  }
+
+  currentSession=data.session;
+  status.textContent="Login berhasil.";
+  document.getElementById("loginCard").style.display="none";
+  document.getElementById("publishBtn").disabled=false;
+  checkAllConnections();
+  loginBtn.disabled=false;
+  loginBtn.textContent="LOGIN";
+}
+
+async function authHeaders(){
+  const { data } = await supabaseClient.auth.getSession();
+  currentSession=data.session;
+
+  if(!currentSession){
+    throw new Error("Sesi login tidak ditemukan. Silakan login kembali.");
+  }
+
+  return {
+    "Content-Type":"application/json",
+    "Authorization":"Bearer "+currentSession.access_token,
+    "apikey":SUPABASE_KEY
+  };
+}
+
+function setConnectionText(platform, text, connected=null){
+ const row=document.getElementById("status-"+platform);
+ if(!row)return;
+ const small=row.querySelector("small");
+ small.textContent=text;
+ row.classList.remove("connected","disconnected");
+ if(connected===true) row.classList.add("connected");
+ if(connected===false) row.classList.add("disconnected");
+}
+
+async function checkStatusEndpoint(platform, endpoint){
+ try{
+  const headers=await authHeaders();
+
+  async function request(method){
+   const res=await fetch(endpoint,{
+    method,
+    headers,
+    body:method==="POST"?JSON.stringify({}):undefined
+   });
+   const data=await res.json().catch(()=>({}));
+   return {res,data};
+  }
+
+  // Instagram-status sebelumnya sudah terbukti bekerja di backend.
+  // Agar UI tidak salah membaca hanya karena HTTP method berbeda,
+  // coba POST terlebih dahulu lalu fallback ke GET bila diperlukan.
+  let result=await request(platform==="instagram"?"POST":"GET");
+
+  if(platform==="instagram" && (!result.res.ok || result.data?.success!==true)){
+   result=await request("GET");
+  }
+
+  const data=result.data||{};
+
+  // Instagram-status yang sudah kita uji sebelumnya mengembalikan
+  // success=true + platform/username. Untuk mencegah UI salah membaca
+  // response yang valid, terima kedua bentuk response: connected=true
+  // atau success=true dengan identitas Instagram.
+  const instagramIdentity =
+    data?.username ||
+    data?.instagram_user_id ||
+    data?.instagram?.username ||
+    data?.account?.username;
+
+  const connected =
+    data?.connected===true ||
+    (platform==="instagram" &&
+     data?.success===true &&
+     (data?.platform==="instagram" || instagramIdentity));
+
+  if(connected){
+   const name=data?.channel?.title ||
+              data?.page?.name ||
+              data?.username ||
+              data?.instagram?.username ||
+              data?.account?.username ||
+              platform;
+   setConnectionText(platform,"✓ Terhubung • "+name,true);
+  }else if(data?.error || data?.message){
+   setConnectionText(platform,"✕ Tidak terhubung",false);
+  }else{
+   setConnectionText(platform,"⚠ Respons status tidak dikenali",false);
+  }
+ }catch(e){
+  setConnectionText(platform,"⚠ Gagal memeriksa status",false);
+ }
+}
+
+
+async function loadFacebookPages(){
+  const selector=document.getElementById("facebookPageSelector");
+  const select=document.getElementById("facebookPageSelect");
+  const note=document.getElementById("facebookPageNote");
+
+  if(!currentSession){
+    selector.style.display="none";
+    return;
+  }
+
+  try{
+    const res=await fetch(FACEBOOK_PAGES,{
+      method:"GET",
+      headers:await authHeaders()
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok || data?.success!==true){
+      selector.style.display="none";
+      return;
+    }
+
+    const pages=Array.isArray(data.pages)?data.pages:[];
+    const selected=data.selected_page?.page_id || "";
+
+    if(!pages.length){
+      selector.style.display="none";
+      return;
+    }
+
+    select.innerHTML=pages.map(p=>{
+      const selectedAttr=String(p.page_id)===String(selected)?" selected":"";
+      return `<option value="${p.page_id}"${selectedAttr}>${escapeHtmlText(p.page_name||"Facebook Page")}</option>`;
+    }).join("");
+
+    selector.style.display="block";
+
+    if(pages.length===1){
+      note.textContent="Page aktif: "+(data.selected_page?.page_name || pages[0].page_name || "Facebook Page");
+    }else{
+      note.textContent=pages.length+" Facebook Page tersedia. Pilih Page yang akan digunakan untuk publish.";
+    }
+
+  }catch(e){
+    selector.style.display="none";
+  }
+}
+
+function escapeHtmlText(value){
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+async function selectFacebookPage(){
+  const select=document.getElementById("facebookPageSelect");
+  const note=document.getElementById("facebookPageNote");
+  const pageId=select.value;
+
+  if(!pageId)return;
+
+  select.disabled=true;
+  note.textContent="Mengganti Page...";
+
+  try{
+    const res=await fetch(FACEBOOK_PAGES,{
+      method:"POST",
+      headers:await authHeaders(),
+      body:JSON.stringify({page_id:pageId})
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok || data?.success!==true){
+      throw new Error(data?.error || data?.message || "Gagal memilih Facebook Page.");
+    }
+
+    const name=data?.selected_page?.page_name || "Facebook Page";
+    note.textContent="✓ Page aktif: "+name;
+    setConnectionText("facebook","✓ Terhubung • "+name,true);
+
+  }catch(e){
+    note.textContent="✕ "+(e.message||"Gagal memilih Page.");
+    await loadFacebookPages();
+  }finally{
+    select.disabled=false;
+  }
+}
+
+
+function tiktokPrivacyLabel(value){
+  const labels={
+    PUBLIC_TO_EVERYONE:"Public / Everyone",
+    MUTUAL_FOLLOW_FRIENDS:"Mutual Follow Friends",
+    FOLLOWER_OF_CREATOR:"Followers of Creator",
+    SELF_ONLY:"Only Me"
+  };
+  return labels[value] || value;
+}
+
+async function loadTikTokCreatorInfo(){
+  const box=document.getElementById("tiktokPrivacyBox");
+  const select=document.getElementById("tiktokPrivacy");
+  const note=document.getElementById("tiktokPrivacyNote");
+
+  if(!currentSession){
+    box.style.display="none";
+    return;
+  }
+
+  try{
+    const res=await fetch(TIKTOK_CREATOR_INFO,{
+      method:"POST",
+      headers:await authHeaders(),
+      body:JSON.stringify({})
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok || data?.success!==true || data?.connected!==true){
+      box.style.display="none";
+      return;
+    }
+
+    const options=Array.isArray(data.privacy_level_options)
+      ? data.privacy_level_options
+      : [];
+
+    select.innerHTML='<option value="">Pilih visibilitas TikTok</option>'+
+      options.map(value=>{
+        return `<option value="${escapeHtmlText(value)}">${tiktokPrivacyLabel(value)}</option>`;
+      }).join("");
+
+    box.style.display="block";
+
+    if(options.includes("PUBLIC_TO_EVERYONE")){
+      note.textContent="TikTok menyediakan visibilitas Public / Everyone.";
+    }else{
+      note.textContent="Pilihan visibilitas mengikuti opsi yang diberikan TikTok.";
+    }
+
+  }catch(e){
+    box.style.display="none";
+  }
+}
+
+async function checkAllConnections(){
+ if(!currentSession){
+  const {data}=await supabaseClient.auth.getSession();
+  currentSession=data.session;
+ }
+ if(!currentSession){
+  setConnectionText("youtube","Login diperlukan",false);
+  setConnectionText("instagram","Login diperlukan",false);
+  setConnectionText("facebook","Login diperlukan",false);
+  return;
+ }
+ setConnectionText("youtube","Memeriksa...");
+ setConnectionText("instagram","Memeriksa...");
+ setConnectionText("facebook","Memeriksa...");
+ await Promise.allSettled([
+  checkStatusEndpoint("youtube",YOUTUBE_STATUS),
+  checkStatusEndpoint("instagram",INSTAGRAM_STATUS),
+  checkStatusEndpoint("facebook",FACEBOOK_STATUS)
+ ]);
+ await loadFacebookPages();
+ await loadTikTokCreatorInfo();
+}
+
+async function reconnectPlatform(platform){
+  const urls={
+    youtube:YOUTUBE_OAUTH,
+    tiktok:TIKTOK_OAUTH,
+    instagram:INSTAGRAM_OAUTH,
+    facebook:FACEBOOK_OAUTH
+  };
+
+  const target=urls[platform];
+  if(!target)return;
+
+  if(platform!=="tiktok"){
+    window.location.href=target;
+    return;
+  }
+
+  try{
+    const headers=await authHeaders();
+
+    const res=await fetch(target,{
+      method:"POST",
+      headers,
+      body:JSON.stringify({})
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok || !data?.auth_url){
+      throw new Error(data?.error||data?.message||"Gagal memulai OAuth TikTok.");
+    }
+
+    window.location.href=data.auth_url;
+  }catch(e){
+    showResult("❌ TikTok OAuth gagal dimulai: "+(e.message||"Terjadi kesalahan."));
+  }
+}
+
+initAuth();
+
+
+const video=document.getElementById("video"),
+preview=document.getElementById("preview"),
+result=document.getElementById("result"),
+btn=document.getElementById("publishBtn");
+
+video.addEventListener("change",()=>{
+ const f=video.files[0];
+ if(!f){preview.style.display="none";return}
+ preview.style.display="block";
+ preview.textContent=`${f.name} • ${(f.size/1024/1024).toFixed(2)} MB`;
+});
+
+function showResult(message,ok=false){
+ result.style.display="block";
+ result.className="result "+(ok?"ok":"err");
+ result.innerHTML=message;
+}
+
+async function publish(){
+ const f=video.files[0],
+ title=document.getElementById("title").value.trim(),
+ description=document.getElementById("description").value.trim(),
+ tagsRaw=document.getElementById("tags").value.trim(),
+ privacy=document.getElementById("privacy").value,
+ useYT=document.getElementById("yt").checked,
+ useTikTok=document.getElementById("tiktok").checked,
+ useInstagram=document.getElementById("instagram").checked,
+ useFacebook=document.getElementById("facebook").checked,
+ tiktokPrivacy=document.getElementById("tiktokPrivacy").value;
+
+ if(!f)return showResult("Pilih video terlebih dahulu.");
+ if(!title)return showResult("Isi judul terlebih dahulu.");
+ if(!useYT&&!useTikTok&&!useInstagram&&!useFacebook)return showResult("Pilih minimal satu platform.");
+ if(useTikTok&&!tiktokPrivacy)return showResult("Pilih visibilitas TikTok terlebih dahulu.");
+ if(f.size>50*1024*1024)return showResult("Video lebih dari 50 MB. Gunakan video maksimal 50 MB untuk POC.");
+
+ btn.disabled=true;
+ btn.textContent="MENGUPLOAD VIDEO...";
+ result.style.display="none";
+
+ try{
+  const safeName=f.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+  const path=`uploads/${Date.now()}-${safeName}`;
+
+  const storageRes=await fetch(`${SUPABASE_URL}/storage/v1/object/videos/${encodeURIComponent(path)}`,{
+   method:"POST",
+   headers:{
+    ...(await authHeaders()),
+    "Content-Type":f.type||"video/mp4",
+    "x-upsert":"false"
+   },
+   body:f
+  });
+
+  if(!storageRes.ok)
+    throw new Error("Upload Storage gagal: "+await storageRes.text());
+
+  const videoUrl=`${SUPABASE_URL}/storage/v1/object/public/videos/${path}`;
+  const tags=tagsRaw.split(/\s+/).map(x=>x.replace(/^#/,"")).filter(Boolean);
+
+  const results=[];
+
+  const ytJob=useYT ? (async()=>{
+   const res=await fetch(PUBLISH_FUNCTION,{
+    method:"POST",
+    headers:await authHeaders(),
+    body:JSON.stringify({
+     video_url:videoUrl,
+     title,
+     description,
+     tags,
+     category_id:"22",
+     privacy_status:privacy
+    })
+   });
+
+   const data=await res.json().catch(()=>({}));
+
+   if(!res.ok||!data.success)
+     throw new Error(data.error||data.message||"YouTube gagal.");
+
+   return data;
+  })() : Promise.resolve(null);
+
+  const tikTokJob=useTikTok ? (async()=>{
+   const res=await fetch(TIKTOK_FUNCTION,{
+    method:"POST",
+    headers:await authHeaders(),
+    body:JSON.stringify({
+     video_url:videoUrl,
+     title,
+     description,
+     tags,
+     privacy_level:tiktokPrivacy
+    })
+   });
+
+   const data=await res.json().catch(()=>({}));
+
+   if(!res.ok||!data.success)
+     throw new Error(data.error||data.message||"TikTok gagal.");
+
+   return data;
+  })() : Promise.resolve(null);
+
+  const facebookJob=useFacebook ? (async()=>{
+   const fbDescription=[
+    title,
+    description,
+    tags.map(x=>"#"+x).join(" ")
+   ].filter(Boolean).join("\n\n");
+
+   const res=await fetch(FACEBOOK_FUNCTION,{
+    method:"POST",
+    headers:await authHeaders(),
+    body:JSON.stringify({
+     video_url:videoUrl,
+     title,
+     description:fbDescription
+    })
+   });
+
+   const data=await res.json().catch(()=>({}));
+
+   if(!res.ok||!data.success)
+     throw new Error(data.error||data.message||"Facebook gagal.");
+
+   return data;
+  })() : Promise.resolve(null);
+
+  const instagramJob=useInstagram ? (async()=>{
+   const caption=[
+    title,
+    description,
+    tags.map(x=>"#"+x).join(" ")
+   ].filter(Boolean).join("\n\n");
+
+   const res=await fetch(INSTAGRAM_FUNCTION,{
+    method:"POST",
+    headers:await authHeaders(),
+    body:JSON.stringify({
+     video_url:videoUrl,
+     caption
+    })
+   });
+
+   const data=await res.json().catch(()=>({}));
+
+   if(!res.ok||!data.success)
+     throw new Error(data.error||data.message||"Instagram gagal.");
+
+   return data;
+  })() : Promise.resolve(null);
+
+  btn.textContent="MEMPUBLIKASIKAN...";
+
+  const settled=await Promise.allSettled([ytJob,tikTokJob,instagramJob,facebookJob]);
+
+  if(useYT){
+   const r=settled[0];
+   if(r.status==="fulfilled"&&r.value){
+    results.push(`<div>✅ <b>YouTube berhasil</b><br>Video ID: ${r.value.video_id}<br><a href="${r.value.youtube_url}" target="_blank">Buka YouTube</a></div>`);
+   }else{
+    results.push(`<div>❌ <b>YouTube gagal</b><br>${r.reason?.message||"Terjadi kesalahan."}</div>`);
+   }
+  }
+
+  if(useTikTok){
+   const r=settled[1];
+
+   if(r.status==="fulfilled"&&r.value){
+    const publishId=r.value.publish_id;
+    let status="PROCESSING";
+
+    for(let i=0;i<12;i++){
+     await new Promise(resolve=>setTimeout(resolve,3000));
+
+     const sr=await fetch(TIKTOK_STATUS,{
+      method:"POST",
+      headers:await authHeaders(),
+      body:JSON.stringify({publish_id:publishId})
+     });
+
+     const sd=await sr.json().catch(()=>({}));
+     status=sd?.data?.status||"PROCESSING";
+
+     if(status==="PUBLISH_COMPLETE"||status==="FAILED")
+       break;
+    }
+
+    if(status==="PUBLISH_COMPLETE"){
+     results.push("<div>✅ <b>TikTok berhasil dipublikasikan</b><br>Status: PUBLISH_COMPLETE</div>");
+    }else if(status==="FAILED"){
+     results.push("<div>❌ <b>TikTok gagal dipublikasikan</b><br>Status: FAILED</div>");
+    }else{
+     results.push(`<div>⏳ <b>TikTok sedang diproses</b><br>Status: ${status}<br>Publish ID: ${publishId}</div>`);
+    }
+   }else{
+    results.push(`<div>❌ <b>TikTok gagal</b><br>${r.reason?.message||"Terjadi kesalahan."}</div>`);
+   }
+  }
+
+  if(useInstagram){
+   const r=settled[2];
+   if(r.status==="fulfilled"&&r.value){
+    results.push(`<div>✅ <b>Instagram berhasil dipublikasikan</b><br>Media ID: ${r.value.media_id}<br>Status: PUBLISHED</div>`);
+   }else{
+    results.push(`<div>❌ <b>Instagram gagal</b><br>${r.reason?.message||"Terjadi kesalahan."}</div>`);
+   }
+  }
+
+  if(useFacebook){
+   const r=settled[3];
+   if(r.status==="fulfilled"&&r.value){
+    results.push(`<div>✅ <b>Facebook berhasil dipublikasikan</b><br>Page: ${r.value.page_name}<br>Video ID: ${r.value.video_id}</div>`);
+   }else{
+    results.push(`<div>❌ <b>Facebook gagal</b><br>${r.reason?.message||"Terjadi kesalahan."}</div>`);
+   }
+  }
+
+  const hasSuccess=results.some(x=>x.includes("✅"));
+  showResult(results.join("<hr style='border:0;border-top:1px solid #31517f;margin:10px 0'>"),hasSuccess);
+
+ }catch(e){
+  showResult("❌ "+(e.message||"Terjadi kesalahan."));
+ }finally{
+  btn.disabled=false;
+  btn.textContent="PUBLISH CONTENT";
+ }
+}
+</script>
+</body>
+</html>
